@@ -1,0 +1,46 @@
+{
+  "name": "dsh-ide-mirror",
+  "displayName": "DSH IDE Mirror",
+  "description": "Mirror the active editor document to the DSH right sidebar and apply its edits back into this editor.",
+  "version": "1.0.0",
+  "publisher": "dsh-local",
+  "license": "MIT",
+  "engines": {
+    "vscode": "^1.85.0"
+  },
+  "categories": [
+    "Other"
+  ],
+  "activationEvents": [
+    "onStartupFinished"
+  ],
+  "main": "./extension.js",
+  "contributes": {
+    "commands": [
+      {
+        "command": "dshMirror.reconnect",
+        "title": "DSH: 重新连接编辑器镜像"
+      },
+      {
+        "command": "dshMirror.status",
+        "title": "DSH: 查看编辑器镜像状态"
+      }
+    ],
+    "configuration": {
+      "title": "DSH IDE Mirror",
+      "properties": {
+        "dshMirror.enabled": {
+          "type": "boolean",
+          "default": true,
+          "description": "是否把当前编辑器文档推送到 DSH 右侧栏镜像。"
+        },
+        "dshMirror.bridgeFile": {
+          "type": "string",
+          "default": "",
+          "description": "DSH 桥描述文件路径；留空使用 ~/.dsh/cache/ide-bridge/bridge.json。"
+        }
+      }
+    }
+  },
+  "scripts": {}
+}

@@ -1,0 +1,23 @@
+# Local IDE bridge bundle.
+#
+# Detects the local VS Code / Cursor CLI once and serves authenticated routes
+# the right Sidebar uses to send workspace files to that editor.
+#
+# Optional config:
+#   defaultEditor: id of the editor the primary button uses (default: vscode)
+#   maxTurns:      number of recent turns merged by the changed-files panel (default: 5)
+#   editors:       override the built-in editor list, for example:
+#     - id: cursor
+#       label: Cursor
+#       cli: cursor
+#       args: ['--goto', '{file}:{line}:{column}', '--reuse-window']
+#     - id: windsurf
+#       label: Windsurf
+#       exe: 'C:\Users\me\AppData\Local\Programs\Windsurf\Windsurf.exe'
+#       args: ['--goto', '{file}:{line}:{column}', '--reuse-window']
+- insert:
+    - id: ide-bridge
+      name: dsh-ide-bridge
+      config:
+        defaultEditor: vscode
+        maxTurns: 5

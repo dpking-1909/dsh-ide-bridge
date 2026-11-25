@@ -1,0 +1,6 @@
+{
+  "meta": {
+    "title": "IDE Bridge",
+    "description": "Open the workspace files the agent changed in your local VS Code or Cursor at the exact line, from the right Sidebar."
+  }
+}
