@@ -20,8 +20,8 @@ import { dirname, join, normalize } from 'node:path'
 
 /** Largest document text accepted from the editor; larger files mirror as metadata only. */
 export const MAX_MIRROR_CONTENT_CHARS = 1_500_000
-/** An instance with no push for this long is dropped from the browser surface. */
-const INSTANCE_TTL_MS = 20000
+/** An instance with no push or poll for this long is dropped from the browser surface. */
+const INSTANCE_TTL_MS = 60000
 /** Commands retained per instance before the oldest are discarded. */
 const MAX_QUEUE_LENGTH = 200
 
@@ -201,13 +201,19 @@ export class MirrorHub {
   }
 
   /** The browser-facing snapshot for one requested path. */
-  snapshot(requestedPath) {
-    const instance = this.preferred()
-    if (!instance) {
+  snapshot(requestedPath, requestedInstanceId) {
+    const pool = [...this.instances.values()]
+    if (pool.length === 0) {
       return { connected: false, instance: null, document: null, matching: false, instances: [] }
     }
+    const requestedKey = requestedPath ? normalizePathKey(requestedPath) : ''
+    const matches = (instance) => Boolean(requestedKey && instance.document && instance.document.path && normalizePathKey(instance.document.path) === requestedKey)
+    let instance
+    if (requestedInstanceId) instance = this.instances.get(String(requestedInstanceId))
+    if (!instance) instance = pool.find(matches)
+    if (!instance) instance = this.preferred()
     const document = instance.document
-    const matching = Boolean(document && document.path && requestedPath && normalizePathKey(document.path) === normalizePathKey(requestedPath))
+    const matching = Boolean(document && matches(instance))
     return {
       connected: true,
       instance: {
@@ -230,7 +236,7 @@ export class MirrorHub {
           }
         : null,
       matching,
-      instances: [...this.instances.values()].map((entry) => ({ id: entry.id, editor: entry.editor, activePath: entry.activePath })),
+      instances: pool.map((entry) => ({ id: entry.id, editor: entry.editor, activePath: entry.activePath })),
     }
   }
 
@@ -249,6 +255,9 @@ export class MirrorHub {
   poll(instanceId, since) {
     const instance = this.instances.get(String(instanceId || ''))
     if (!instance) return { ok: false, error: 'unknown instance', commands: [], next: 0 }
+    // The extension polls continuously while it runs; counting the poll as a
+    // heartbeat keeps an idle editor connected instead of expiring after the TTL.
+    instance.lastSeen = Date.now()
     const from = Number.isFinite(Number(since)) ? Number(since) : 0
     const commands = instance.queue.filter((entry) => entry.seq > from).map((entry) => ({ seq: entry.seq, ...entry.command }))
     const next = commands.length > 0 ? commands[commands.length - 1].seq : from

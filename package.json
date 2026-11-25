@@ -52,9 +52,7 @@
         "@deepseek-ai/dsh-client-locale",
         "@deepseek-ai/dsh-client-ui-sidebar-right",
         "@deepseek-ai/dsh-client-ui-sidebar-files",
-        "@deepseek-ai/dsh-client-ui-sidebar-documentpreview",
-        "@deepseek-ai/dsh-api-workspace-files",
-        "@deepseek-ai/dsh-api-remotes"
+        "@deepseek-ai/dsh-client-ui-sidebar-documentpreview"
       ]
     }
   },

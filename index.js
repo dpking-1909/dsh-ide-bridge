@@ -6,7 +6,6 @@
  *   POST /api/ide-bridge.open             open one workspace file at a line
  *   POST /api/ide-bridge.open-folder      open a directory (or a file's folder)
  *   GET  /api/ide-bridge.changes          changed files merged over recent turns
- *   POST /api/ide-bridge.save             write one file's edited text back to disk
  *   GET  /api/ide-bridge.mirror           the mirrored editor document
  *   POST /api/ide-bridge.mirror-command   queue one command for the editor
  *
@@ -14,11 +13,9 @@
  * to (`/ide-bridge/*`, loopback and token-guarded), and publishes the bridge
  * descriptor next to the DSH home directory.
  *
- * Nothing here talks to the model, and no shell is involved in launching an
- * editor: the argument list is passed to the process as an array. Writes go
- * through `ctx.fs` with the Session's resolved sandbox policy, so the same
- * read-only / workspace-write boundary that guards the agent's tools also
- * guards this route.
+ * The editor process owns the buffers; this half only mirrors documents and
+ * queues commands. Nothing here talks to the model, and no shell is involved in
+ * launching an editor: the argument list is passed to the process as an array.
  */
 import { statSync } from 'node:fs'
 import { dirname, isAbsolute, resolve } from 'node:path'
@@ -29,14 +26,13 @@ const ROUTE_EDITORS = '/api/ide-bridge.editors'
 const ROUTE_OPEN = '/api/ide-bridge.open'
 const ROUTE_OPEN_FOLDER = '/api/ide-bridge.open-folder'
 const ROUTE_CHANGES = '/api/ide-bridge.changes'
-const ROUTE_SAVE = '/api/ide-bridge.save'
 const ROUTE_MIRROR = '/api/ide-bridge.mirror'
 const ROUTE_MIRROR_COMMAND = '/api/ide-bridge.mirror-command'
 const MIRROR_PREFIX = '/ide-bridge'
 const MAX_BRIDGE_BODY_BYTES = 8 * 1024 * 1024
 
 /** Host services this plugin needs before it can activate. */
-export const inject = ['connection', 'sessions', 'fs', 'sandboxPolicy', 'webServer']
+export const inject = ['connection', 'sessions', 'webServer']
 
 
 
@@ -160,18 +156,6 @@ function statTarget(absolutePath) {
 /** The live Session for a request, or undefined. */
 function sessionOf(ctx, sessionId) {
   return typeof sessionId === 'string' && sessionId ? ctx.sessions.get(sessionId) : undefined
-}
-
-/** Translate one guarded-write failure into its HTTP status and client code. */
-function writeFailure(error) {
-  const code = error && typeof error.code === 'string' ? error.code : ''
-  if (code === 'FS_STALE_VERSION') return { status: 409, code: 'stale' }
-  if (code === 'FS_SANDBOX_DENIED' || code === 'FS_PERMISSION_DENIED') return { status: 403, code: 'denied' }
-  if (code === 'FS_NOT_FOUND') return { status: 404, code: 'not-found' }
-  if (code === 'FS_NOT_REGULAR_FILE' || code === 'FS_NOT_TEXT' || code === 'FS_TOO_LARGE' || code === 'FS_ABORTED') {
-    return { status: 400, code: 'write-failed' }
-  }
-  return { status: 500, code: 'write-failed' }
 }
 
 /** The plain-HTTP bridge the editor extension talks to (loopback, token guarded). */
@@ -418,40 +402,6 @@ export function apply(ctx, config) {
   })
 
   ctx.connection.fetch.register({
-    path: ROUTE_SAVE,
-    methods: ['POST'],
-    requestBody: 'buffered',
-    fetch: handle(async (request) => {
-      const body = await readJson(request)
-      if (typeof body.content !== 'string') throw new HttpError(400, '`content` must be a string')
-      const absolutePath = resolveTarget(ctx, body.sessionId, body.path)
-      const info = statTarget(absolutePath)
-      if (!info.isFile()) throw new HttpError(400, `Not a regular file: ${absolutePath}`)
-      const session = sessionOf(ctx, body.sessionId)
-      const cwd = session && session.header ? session.header.cwd : undefined
-      const target = await ctx.fs.resolve(absolutePath, cwd ? { cwd, signal: request.signal } : { signal: request.signal })
-      const force = body.force === true
-      const baseVersion = typeof body.baseVersion === 'string' && body.baseVersion ? body.baseVersion : ''
-      const intent = !force && baseVersion ? { kind: 'replaceIfVersion', version: baseVersion } : undefined
-      let policy
-      try {
-        policy = ctx.sandboxPolicy.resolve({ session })
-      } catch {
-        policy = undefined
-      }
-      let outcome
-      try {
-        outcome = await ctx.fs.writeText(target, body.content, intent, request.signal, policy)
-      } catch (error) {
-        const failure = writeFailure(error)
-        return json({ error: messageOf(error), code: failure.code }, failure.status)
-      }
-      const resolved = typeof ctx.fs.processPath === 'function' ? ctx.fs.processPath(target) : absolutePath
-      return json({ ok: true, path: resolved, version: String(outcome.version), operation: outcome.operation })
-    }),
-  })
-
-  ctx.connection.fetch.register({
     path: ROUTE_MIRROR,
     methods: ['GET'],
     requestBody: 'buffered',
@@ -463,7 +413,8 @@ export function apply(ctx, config) {
       // File addresses carry workspace-relative paths while the editor pushes
       // absolute ones; resolve the requested path before comparing identities.
       const resolvedPath = requestedPath && !isAbsolute(requestedPath) && cwd ? resolve(cwd, requestedPath) : requestedPath
-      return json(hub.snapshot(resolvedPath))
+      const requestedInstance = url.searchParams.get('instanceId') || ''
+      return json(hub.snapshot(resolvedPath, requestedInstance))
     }),
   })
 

@@ -306,6 +306,9 @@ async function connect() {
 function registerEvents(context) {
   context.subscriptions.push(
     vscode.window.onDidChangeActiveTextEditor(() => schedulePush(0)),
+    vscode.window.onDidChangeWindowState((windowState) => {
+      if (windowState.focused) schedulePush(0)
+    }),
     vscode.workspace.onDidChangeTextDocument((event) => {
       const editor = vscode.window.activeTextEditor
       if (editor && event.document === editor.document) schedulePush(90)

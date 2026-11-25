@@ -39,8 +39,11 @@ changed files in one click.
   changed line). Falls back to `write` / `edit` tool calls when the Host keeps no change record.
 - **External editor toolbar** — VS Code / Cursor buttons in the editor header, launching the local CLI at the current
   line (`--goto file:line:col --reuse-window`); no shell involved.
-- **Graceful fallback** — without a connected editor the sidebar reads and writes the file directly through the
-  Harness filesystem (`ctx.fs`) under the session's sandbox policy.
+- **Stable mirror selection** — the extension polls the bridge as a heartbeat, so an idle editor stays connected; the
+  Host prefers the instance whose active document matches the requested path, the browser pins that instance, and a
+  three-poll hysteresis keeps the last mirrored content through transient misses.
+- **Explanatory fallback** — when no editor can mirror the file the pane says why and offers *open in editor*,
+  *read-only preview* and *retry* instead of silently switching editing backends.
 
 ## Requirements
 
@@ -90,7 +93,8 @@ The extension connects to the descriptor the Host writes to `~/.dsh/cache/ide-br
 4. `保存 / Save` (or `Ctrl+S`) asks the editor to save; the dirty dot follows the editor document.
 5. If the file is not open in the editor, the sidebar opens it there **without stealing focus** and then mirrors it.
 
-When no editor is connected, the footer reads **`文件模式 / File mode`** and the sidebar edits the file directly.
+When no editor is connected (extension disabled, editor closed, or the file cannot be mirrored) the pane explains the
+reason and offers *open in editor*, *read-only preview* and *retry*. The plugin never edits files on disk on its own.
 
 ## Configuration
 
@@ -116,10 +120,9 @@ Host routes served for the browser (inside the authenticated `/api` fence):
 
 | Route | Purpose |
 | --- | --- |
-| `GET /api/ide-bridge.mirror` | mirrored document snapshot for a path |
+| `GET /api/ide-bridge.mirror` | mirrored document snapshot for a path (optional `instanceId` pin) |
 | `POST /api/ide-bridge.mirror-command` | queue `open` / `edit` / `save` for the editor |
 | `GET /api/ide-bridge.changes` | changed files merged over recent turns |
-| `POST /api/ide-bridge.save` | file-mode save through `ctx.fs` + sandbox policy |
 | `POST /api/ide-bridge.open` / `.open-folder` | launch the local editor |
 | `GET /api/ide-bridge.editors` | detected editors |
 
@@ -141,14 +144,14 @@ Command payloads the extension understands:
 - Bridge routes are served by the loopback Web server only and reject requests without the token. They are not part of
   the model-facing tool surface; nothing here appends session events or prompt text.
 - The extension acts only on commands the Host queues from the authenticated browser surface.
-- File-mode saves go through `ctx.fs.writeText` with the session's resolved sandbox policy, so `workspace-write`
-  boundaries still apply.
+- The plugin never writes workspace files itself: the editor process owns the buffers and performs saves, so the
+  session's sandbox policy does not have to be widened for this feature.
 
 ## Limitations
 
 - The mirror carries up to **1.5 M characters** per document; larger files mirror metadata only and must be edited in the
   editor.
-- File mode (no editor) reads at most `MAX_PAGES` pages (~40 000 lines) and refuses to save a truncated file.
+- The pane cannot edit when no editor is connected; it explains the reason and offers a read-only preview instead.
 - The extension targets the VS Code API (both VS Code and Cursor); it is not packaged on a marketplace.
 - No iframe embedding is used: VS Code's web server refuses cross-origin framing (`X-Frame-Options: SAMEORIGIN`), so the
   mirror approach was chosen instead.

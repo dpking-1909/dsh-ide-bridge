@@ -67,10 +67,25 @@ async function verifyClientHalf() {
   if (!captured) return
   checkEqual('client module id', captured.id, 'dsh-ide-bridge')
 
+  const source = readFileSync(join(root, 'client.js'), 'utf8')
+  const usedKeys = new Set()
+  for (const match of source.matchAll(/\bt\('([^']+)'/g)) usedKeys.add(match[1])
+  const dictKeys = (name) => {
+    const start = source.indexOf(`    const ${name} = {`)
+    const end = source.indexOf('\n    }', start)
+    const keys = new Set()
+    for (const match of source.slice(start, end).matchAll(/^\s*'([^']+)':/gm)) keys.add(match[1])
+    return keys
+  }
+  const zhKeys = dictKeys('ZH')
+  const enKeys = dictKeys('EN')
+  checkEqual('locale ZH covers every used key', [...usedKeys].filter((key) => !zhKeys.has(key)), [])
+  checkEqual('locale EN covers every used key', [...usedKeys].filter((key) => !enKeys.has(key)), [])
+  checkEqual('locale dictionaries have identical keys', [...zhKeys].filter((key) => !enKeys.has(key)), [])
+
   const tabDefinitions = []
   const slotRegistrations = []
   const effects = []
-  const workspaceFiles = { read: async () => ({ text: '', version: 'v1', lines: 1, eof: true }), stat: async () => ({ version: 'v1' }) }
   const ctx = {
     locale: { bind: () => (key) => key, register: () => () => {} },
     effect(callback, label) {
@@ -93,11 +108,10 @@ async function verifyClientHalf() {
       },
     },
     sidebarRight: { openResource: () => {} },
-    remote: { workspaceFiles },
   }
 
   const plugin = captured.factory(requireStub)
-  for (const service of ['slots', 'locale', 'sidebarRightTabs', 'sidebarRight', 'remote', 'remote.workspaceFiles']) {
+  for (const service of ['slots', 'locale', 'sidebarRightTabs', 'sidebarRight']) {
     check(`injects ${service}`, plugin.inject.includes(service))
   }
   plugin.apply(ctx)
@@ -120,8 +134,8 @@ async function verifyClientHalf() {
   if (editorBody) {
     checkEqual('editor body component', editorBody.component.name, 'MirrorCodeEditor')
     const injected = editorBody.options.inject()
-    check('editor body receives workspaceFiles', Boolean(injected && injected.workspaceFiles))
     check('editor body receives navigation helpers', typeof injected.openResource === 'function' && typeof injected.openPreview === 'function')
+    checkEqual('editor body carries no filesystem reader', Object.keys(injected).sort(), ['openPreview', 'openResource'])
   }
   const slotNames = slotRegistrations.map((entry) => entry.options.name)
   for (const slot of ['sidebar.right.pane.tab', 'sidebar.right.tab.document.actions', 'sidebar.right.tab.document.unpreviewable', 'sidebar.right.tab.files.actions']) {
@@ -145,14 +159,6 @@ async function verifyHostHalf() {
       connection: { fetch: { register: (route) => routes.set(`${route.methods.join(',')} ${route.path}`, route) } },
       sessions: { get: (id) => (id === 'session-1' ? session : undefined) },
       get: () => undefined,
-      fs: {
-        resolve: async (path) => ({ targetKey: path, displayPath: path }),
-        writeText: async () => {
-          throw new Error('unexpected write')
-        },
-        processPath: (target) => target.displayPath,
-      },
-      sandboxPolicy: { resolve: () => ({ mode: 'workspace-write', workspaceRoot: 'D:\\proj' }) },
       webServer: {
         getOrigin: () => 'http://127.0.0.1:3080',
         register: (route) => {
@@ -243,6 +249,24 @@ async function verifyHostHalf() {
     checkEqual('queued command carries an absolute path', firstPoll.commands[0] && firstPoll.commands[0].path, 'D:\\proj\\src\\a.ts')
     const secondPoll = JSON.parse((await plain('GET', `/ide-bridge/commands?instanceId=instance-1&since=${firstPoll.next}`, { token: descriptor.token })).body)
     checkEqual('command cursor drains the queue', secondPoll.commands, [])
+
+    // A second, more recently active editor must not steal a path the first one mirrors.
+    await plain('POST', '/ide-bridge/push', {
+      token: descriptor.token,
+      body: {
+        instanceId: 'instance-2',
+        editor: 'cursor',
+        editorVersion: '3.32.4',
+        type: 'document',
+        activePath: 'D:\\proj\\src\\b.ts',
+        document: { path: 'D:\\proj\\src\\b.ts', languageId: 'typescript', version: 2, dirty: false, size: 12, text: 'const b = 2\n' },
+      },
+    })
+    const pathPreferred = await api('GET /api/ide-bridge.mirror', 'http://x/api/ide-bridge.mirror?sessionId=session-1&path=src/a.ts')
+    checkEqual('mirror prefers the instance that has the requested path', pathPreferred.body.instance && pathPreferred.body.instance.id, 'instance-1')
+    const pinned = await api('GET /api/ide-bridge.mirror', 'http://x/api/ide-bridge.mirror?sessionId=session-1&path=src/a.ts&instanceId=instance-2')
+    checkEqual('mirror honours an explicitly pinned instance', pinned.body.instance && pinned.body.instance.id, 'instance-2')
+    checkEqual('pinned instance reports the requested path as non-matching', pinned.body.matching, false)
 
     for (const dispose of [...disposers].reverse()) {
       try {

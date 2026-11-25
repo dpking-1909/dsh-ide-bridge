@@ -40,12 +40,9 @@ window.__ModuleLoader__.load({
     const ROUTE_OPEN = '/api/ide-bridge.open'
     const ROUTE_OPEN_FOLDER = '/api/ide-bridge.open-folder'
     const ROUTE_CHANGES = '/api/ide-bridge.changes'
-    const ROUTE_SAVE = '/api/ide-bridge.save'
     const ROUTE_MIRROR = '/api/ide-bridge.mirror'
     const ROUTE_MIRROR_COMMAND = '/api/ide-bridge.mirror-command'
     const ROUTE_CHANGES_DIFF = '/api/changes.diff'
-    /** Text pages read per file before the editor stops following. */
-    const MAX_PAGES = 8
     /** Files above this size or line count lose syntax colouring. */
     const HIGHLIGHT_MAX_CHARS = 200000
     const HIGHLIGHT_MAX_LINES = 4000
@@ -134,39 +131,31 @@ window.__ModuleLoader__.load({
     const ZH = {
       'action.openIn': '在 {name} 中打开',
       'action.openFolder': '在 {name} 中打开此目录',
-      'editor.loading': '正在读取文件…',
-      'editor.readFailed': '读取失败：{message}',
-      'editor.tooLarge': '文件太大或分页过多，无法在右侧完整载入；请用外部编辑器打开。',
+      'editor.loading': '正在连接编辑器镜像…',
+      'editor.unsupported': '这个地址不是工作区文件，无法在右侧镜像',
+      'editor.unavailableDisconnected': '未连接编辑器。请在 VS Code / Cursor 中确认 DSH 镜像扩展已启用，然后重试。',
+      'editor.unavailableElsewhere': '编辑器当前打开的是 {path}。',
+      'editor.tooLarge': '文件较大，镜像只同步元数据；请在编辑器中编辑。',
+      'editor.openInEditor': '在编辑器中打开此文件',
+      'editor.previewOnly': '只读预览',
       'editor.retry': '重试',
-      'editor.unsupported': '这个地址不是工作区文件，无法在右侧编辑',
       'editor.aria': '代码编辑区',
       'editor.save': '保存',
       'editor.saving': '保存中…',
-      'editor.saved': '已保存',
+      'editor.saved': '已请求编辑器保存',
       'editor.reload': '重新载入',
       'editor.dirty': '有未保存的修改',
-      'editor.external': '磁盘内容已更新。',
-      'editor.externalHint': '有其他程序（包括助手）改过这个文件。',
-      'editor.reloadNow': '载入最新内容',
-      'editor.keepMine': '保留我的修改',
-      'editor.stale': '文件已在磁盘上发生变化，保存被阻止。',
-      'editor.forceSave': '用我的内容覆盖',
-      'editor.reloadConfirm': '有未保存的修改，重新载入会丢弃它们。',
-      'editor.saveFailed': '保存失败：{message}',
-      'editor.cursor': '行 {line}，列 {column}',
-      'editor.lines': '{count} 行',
-      'editor.hint': '点击下方代码即可编辑，Ctrl+S 保存',
       'editor.mirrorBadge': '{name} 镜像',
-      'editor.mirrorFiles': '文件模式',
-      'editor.mirrorDisconnected': '编辑器未连接，当前为文件模式（可直接编辑并保存到磁盘）。',
-      'editor.mirrorActiveElsewhere': '编辑器当前打开的是 {path}。',
-      'editor.mirrorOpenHere': '在编辑器中打开此文件',
-      'editor.mirrorLocate': '在编辑器中定位',
       'editor.mirrorConflict': '编辑器里的内容已被修改。',
       'editor.mirrorTakeRemote': '以编辑器为准',
       'editor.mirrorOverwrite': '用侧栏内容覆盖编辑器',
-      'editor.mirrorSaved': '已请求编辑器保存',
-      'editor.mirrorTooLarge': '文件较大，镜像只显示元数据；请在编辑器中编辑。',
+      'editor.mirrorLocate': '在编辑器中定位',
+      'editor.saveFailed': '同步失败：{message}',
+      'editor.readFailed': '操作失败：{message}',
+      'editor.cursor': '行 {line}，列 {column}',
+      'editor.lines': '{count} 行',
+      'editor.hint': '在侧栏编辑会写回编辑器缓冲区；Ctrl+S 让编辑器保存',
+      'editor.modeIdle': '未连接',
       'changes.title': '变更文件',
       'changes.description': '最近几轮改过的文件，点击在右侧编辑',
       'changes.refresh': '刷新',
@@ -189,39 +178,31 @@ window.__ModuleLoader__.load({
     const EN = {
       'action.openIn': 'Open in {name}',
       'action.openFolder': 'Open this folder in {name}',
-      'editor.loading': 'Reading the file…',
-      'editor.readFailed': 'Read failed: {message}',
-      'editor.tooLarge': 'The file is too large to load completely here; open it in an external editor.',
+      'editor.loading': 'Connecting to the editor mirror…',
+      'editor.unsupported': 'This address is not a workspace file and cannot be mirrored',
+      'editor.unavailableDisconnected': 'No editor is connected. Make sure the DSH mirror extension is enabled in VS Code / Cursor, then retry.',
+      'editor.unavailableElsewhere': 'The editor currently has {path} open.',
+      'editor.tooLarge': 'The file is large, so the mirror only carries metadata; edit it in the editor.',
+      'editor.openInEditor': 'Open this file in the editor',
+      'editor.previewOnly': 'Read-only preview',
       'editor.retry': 'Retry',
-      'editor.unsupported': 'This address is not a workspace file and cannot be edited here',
       'editor.aria': 'Code editor',
       'editor.save': 'Save',
       'editor.saving': 'Saving…',
-      'editor.saved': 'Saved',
+      'editor.saved': 'Asked the editor to save',
       'editor.reload': 'Reload',
       'editor.dirty': 'Unsaved changes',
-      'editor.external': 'The file changed on disk.',
-      'editor.externalHint': 'Another program (including the assistant) modified it.',
-      'editor.reloadNow': 'Load the latest content',
-      'editor.keepMine': 'Keep my changes',
-      'editor.stale': 'The file changed on disk, so the save was blocked.',
-      'editor.forceSave': 'Overwrite with my content',
-      'editor.reloadConfirm': 'Reloading discards your unsaved changes.',
-      'editor.saveFailed': 'Save failed: {message}',
-      'editor.cursor': 'Ln {line}, Col {column}',
-      'editor.lines': '{count} line(s)',
-      'editor.hint': 'Click the code below to edit; Ctrl+S saves',
       'editor.mirrorBadge': '{name} mirror',
-      'editor.mirrorFiles': 'File mode',
-      'editor.mirrorDisconnected': 'No editor is connected; file mode lets you edit and save to disk directly.',
-      'editor.mirrorActiveElsewhere': 'The editor currently has {path} open.',
-      'editor.mirrorOpenHere': 'Open this file in the editor',
-      'editor.mirrorLocate': 'Reveal in editor',
       'editor.mirrorConflict': 'The editor content changed elsewhere.',
       'editor.mirrorTakeRemote': 'Use the editor content',
       'editor.mirrorOverwrite': 'Overwrite the editor with my content',
-      'editor.mirrorSaved': 'Asked the editor to save',
-      'editor.mirrorTooLarge': 'The file is large, so the mirror only carries metadata; edit it in the editor.',
+      'editor.mirrorLocate': 'Reveal in editor',
+      'editor.saveFailed': 'Sync failed: {message}',
+      'editor.readFailed': 'Failed: {message}',
+      'editor.cursor': 'Ln {line}, Col {column}',
+      'editor.lines': '{count} line(s)',
+      'editor.hint': 'Edits here write back to the editor buffer; Ctrl+S asks the editor to save',
+      'editor.modeIdle': 'Not connected',
       'changes.title': 'Changed files',
       'changes.description': 'Files changed over the last turns; click one to edit it here',
       'changes.refresh': 'Refresh',
@@ -504,21 +485,6 @@ window.__ModuleLoader__.load({
       })
     }
 
-    /** Write one file's new text through the Host. */
-    function saveFile(options) {
-      return requestJson(ROUTE_SAVE, {
-        method: 'POST',
-        headers: { 'content-type': 'application/json' },
-        body: JSON.stringify({
-          sessionId: options.sessionId,
-          path: options.path,
-          content: options.content,
-          baseVersion: options.baseVersion || undefined,
-          force: options.force === true,
-        }),
-      })
-    }
-
     /** Read the merged changed-file panel payload. */
     function fetchChangedFiles(sessionId, turns) {
       const query = new URLSearchParams({ sessionId, turns: String(turns || MAX_TURNS) })
@@ -526,8 +492,9 @@ window.__ModuleLoader__.load({
     }
 
     /** Read the editor-mirror snapshot for one workspace file. */
-    function fetchMirror(sessionId, path, signal) {
+    function fetchMirror(sessionId, path, signal, instanceId) {
       const query = new URLSearchParams({ sessionId, path })
+      if (instanceId) query.set('instanceId', instanceId)
       return requestJson(ROUTE_MIRROR + '?' + query.toString(), { headers: { accept: 'application/json' }, signal })
     }
 
@@ -553,35 +520,6 @@ window.__ModuleLoader__.load({
           return 0
         })
         .catch(() => 0)
-    }
-
-    /**
-     * Read a whole text file through the workspace-files Remote, page by page.
-     * @param workspaceFiles - the injected Remote namespace.
-     * @param sessionId - the authorizing Session.
-     * @param path - relative or absolute workspace path.
-     * @param signal - cancellation.
-     * @returns joined text, the last observed version, and whether the whole file was read.
-     */
-    async function readWholeFile(workspaceFiles, sessionId, path, signal) {
-      const parts = []
-      let offset = 1
-      let version = ''
-      let complete = false
-      for (let pageIndex = 0; pageIndex < MAX_PAGES; pageIndex += 1) {
-        const page = await workspaceFiles.read(sessionId, path, { offset }, signal)
-        if (!page) break
-        parts.push(typeof page.text === 'string' ? page.text : '')
-        if (typeof page.version === 'string' && page.version) version = page.version
-        if (page.eof) {
-          complete = true
-          break
-        }
-        const lines = Number.isInteger(page.lines) && page.lines > 0 ? page.lines : 0
-        if (lines === 0) break
-        offset += lines
-      }
-      return { text: parts.join('\n'), version, pages: parts.length, complete }
     }
 
     /** Tokenize one line into `{ kind, text }` runs. */
@@ -791,40 +729,34 @@ window.__ModuleLoader__.load({
     }
 
     /**
-     * The in-place code editor.
+     * The in-place code editor, entirely backed by the connected editor's mirror.
      *
-     * It prefers the editor-process mirror: when VS Code / Cursor has the file
-     * open, the pane renders that document and sends edits back as commands.
-     * Without a connected editor it falls back to reading and writing the file
-     * through the Harness filesystem (file mode).
+     * The editor process owns the buffer: this pane renders the mirrored document,
+     * sends local edits back as commands, and degrades to an explanatory empty
+     * state when no editor can mirror the file. There is no second editing mode.
      */
     function MirrorCodeEditor(props) {
-      const { useTabInfo, sessionId, t, workspaceFiles } = props
+      const { useTabInfo, sessionId, t, openPreview } = props
       const { tab } = useTabInfo()
       const target = useMemo(() => splitAddress(tab.contentId), [tab.contentId])
       const editorSessionId = target ? target.sessionId || sessionId : sessionId
       const navigationLine = tab.navigation && tab.navigation.params && Number.isInteger(tab.navigation.params.line) ? tab.navigation.params.line : 0
       const navigationRevision = tab.navigation ? tab.navigation.revision : 0
-      const snapshot = useEditors()
-      const editors = snapshot.editors
+      const editorSnapshot = useEditors()
+      const editors = editorSnapshot.editors
       const primary = primaryEditor(editors)
       const others = otherEditors(editors)
 
-      const [mode, setMode] = useState('loading')
-      const modeRef = useRef('loading')
+      const [mode, setMode] = useState('connecting')
+      const modeRef = useRef('connecting')
       const [text, setText] = useState('')
       const textRef = useRef('')
       textRef.current = text
-      const [savedText, setSavedText] = useState('')
-      const [version, setVersion] = useState('')
-      const versionRef = useRef('')
-      versionRef.current = version
       const [mirror, setMirror] = useState(null)
       const mirrorRef = useRef(null)
       const [pendingActive, setPendingActive] = useState(false)
       const pendingRef = useRef({ active: false, text: '', expectedVersion: 0, force: false })
       const [mirrorDirty, setMirrorDirty] = useState(false)
-      const [readError, setReadError] = useState('')
       const [saving, setSaving] = useState(false)
       const [status, setStatus] = useState('')
       const [error, setError] = useState('')
@@ -835,19 +767,19 @@ window.__ModuleLoader__.load({
       const textareaRef = useRef(null)
       const preRef = useRef(null)
       const gutterRef = useRef(null)
-      const loadGenerationRef = useRef(0)
-      const abortRef = useRef(null)
-      const filesLoadStartedRef = useRef(false)
       const editTimerRef = useRef(null)
       const autoOpenRef = useRef({ path: '', requested: false, polls: 0 })
+      const unusableRef = useRef(0)
+      const pinRef = useRef('')
+      const pollNowRef = useRef(() => {})
       const language = useMemo(() => languageOf(target ? target.path : ''), [target])
-      const dirty = mode === 'mirror' ? mirrorDirty || pendingActive : text !== savedText
+      const dirty = mirror ? mirrorDirty || pendingActive : false
       const lines = useMemo(() => text.split('\n'), [text])
       const lineCount = lines.length
       const digitCount = String(lineCount).length
       const editorName = (kind) => (kind === 'cursor' ? 'Cursor' : kind === 'vscode-insiders' ? 'VS Code Insiders' : 'VS Code')
 
-      /** Switch the surface mode and keep the ref in sync immediately. */
+      /** Switch surface mode, keeping the ref in sync immediately. */
       const changeMode = useCallback((next) => {
         modeRef.current = next
         setMode(next)
@@ -874,52 +806,7 @@ window.__ModuleLoader__.load({
         setCursor({ line, column })
       }, [])
 
-      /** Load the file from the Harness filesystem (file mode). */
-      const loadFile = useCallback(
-        async (silent) => {
-          if (!target) return
-          const generation = loadGenerationRef.current + 1
-          loadGenerationRef.current = generation
-          if (abortRef.current) abortRef.current.abort()
-          const controller = new AbortController()
-          abortRef.current = controller
-          const signal = tab.signal ? AbortSignal.any([tab.signal, controller.signal]) : controller.signal
-          if (silent !== true) changeMode('files')
-          setReadError('')
-          try {
-            const result = await readWholeFile(workspaceFiles, editorSessionId, target.path, signal)
-            if (generation !== loadGenerationRef.current || controller.signal.aborted) return
-            if (!result.complete) {
-              changeMode('error')
-              setReadError(t('editor.tooLarge'))
-              return
-            }
-            setText(result.text)
-            setSavedText(result.text)
-            setVersion(result.version)
-            setStatus('')
-            changeMode('files')
-          } catch (failure) {
-            if (generation !== loadGenerationRef.current || controller.signal.aborted) return
-            changeMode('error')
-            setReadError(messageOf(failure))
-          }
-        },
-        [target, workspaceFiles, editorSessionId, tab.signal, t, changeMode],
-      )
-
-      /** Enter file mode, loading the file once. */
-      const startFilesMode = useCallback(() => {
-        if (modeRef.current === 'files' || modeRef.current === 'error') return
-        changeMode('files')
-        setReadError('')
-        if (!filesLoadStartedRef.current) {
-          filesLoadStartedRef.current = true
-          loadFile(true)
-        }
-      }, [changeMode, loadFile])
-
-      /** Queue the pending sidebar edit for the connected editor. */
+      /** Queue the pending sidebar edit for the editor. */
       const flushMirrorEdit = useCallback(() => {
         const pending = pendingRef.current
         if (!pending.active || !target) return Promise.resolve()
@@ -928,24 +815,31 @@ window.__ModuleLoader__.load({
           editTimerRef.current = null
         }
         const current = mirrorRef.current
-        const instanceId = current && current.instance ? current.instance.id : ''
+        const instanceId = current && current.instance ? current.instance.id : pinRef.current
         const document = current && current.document
         const force = pending.force || Boolean(document && document.version !== pending.expectedVersion)
         pending.force = true
-        return sendMirrorCommand(instanceId, {
-          type: 'edit',
-          path: target.path,
-          text: pending.text,
-          expectedVersion: pending.expectedVersion,
-          force,
-        }, editorSessionId).catch((failure) => {
-          setError(messageOf(failure))
+        return sendMirrorCommand(
+          instanceId,
+          {
+            type: 'edit',
+            path: target.path,
+            text: pending.text,
+            expectedVersion: pending.expectedVersion,
+            force,
+          },
+          editorSessionId,
+        ).catch((failure) => {
+          setError(t('editor.saveFailed', { message: messageOf(failure) }))
         })
-      }, [target, editorSessionId])
+      }, [target, editorSessionId, t])
 
-      /** Record a local edit and debounce its command to the editor. */
-      const scheduleMirrorEdit = useCallback(
+      /** Update local text and mirror the change to the editor when connected. */
+      const applyLocalEdit = useCallback(
         (next) => {
+          setText(next)
+          setStatus('')
+          if (modeRef.current !== 'mirror') return
           const current = mirrorRef.current
           const document = current && current.document
           const pending = pendingRef.current
@@ -961,27 +855,18 @@ window.__ModuleLoader__.load({
         [flushMirrorEdit],
       )
 
-      /** Update local text, mirroring the change to the editor when connected. */
-      const applyLocalEdit = useCallback(
-        (next) => {
-          setText(next)
-          setStatus('')
-          if (modeRef.current === 'mirror') scheduleMirrorEdit(next)
-        },
-        [scheduleMirrorEdit],
-      )
-
-      /** Ask the connected editor to open one file (optionally at a line). */
+      /** Ask the editor to open this file (optionally at a line) without stealing focus. */
       const openInConnectedEditor = useCallback(
-        (line) => {
+        (line, instanceId) => {
           const current = mirrorRef.current
-          if (!current || !current.connected || !current.instance || !target) {
-            setError(t('editor.mirrorDisconnected'))
-            return
+          const id = instanceId || (current && current.instance ? current.instance.id : pinRef.current)
+          if (!target || !id) {
+            setError(t('editor.unavailableDisconnected'))
+            return Promise.resolve()
           }
-          sendMirrorCommand(current.instance.id, { type: 'open', path: target.path, line: line || 0 }, editorSessionId).catch((failure) => setError(messageOf(failure)))
+          return sendMirrorCommand(id, { type: 'open', path: target.path, line: line || 0, preserveFocus: true }, editorSessionId).catch((failure) => setError(messageOf(failure)))
         },
-        [target, t, editorSessionId],
+        [target, editorSessionId, t],
       )
 
       /** Reconcile one mirror snapshot into the surface. */
@@ -989,40 +874,36 @@ window.__ModuleLoader__.load({
         (nextSnapshot) => {
           mirrorRef.current = nextSnapshot
           setMirror(nextSnapshot)
+          if (nextSnapshot && nextSnapshot.instance && nextSnapshot.instance.id) pinRef.current = nextSnapshot.instance.id
           const document = nextSnapshot && nextSnapshot.matching ? nextSnapshot.document : null
-          const tooLarge = Boolean(nextSnapshot && nextSnapshot.connected && document && (document.tooLarge === true || document.truncated === true))
-          const usable = Boolean(nextSnapshot && nextSnapshot.connected && document && !tooLarge)
+          const usable = Boolean(nextSnapshot && nextSnapshot.connected && document && document.tooLarge !== true && document.truncated !== true)
           if (!usable) {
-            if (tooLarge) {
-              changeMode('error')
-              setReadError(t('editor.mirrorTooLarge'))
-              return
-            }
-            // A connected editor that has another file active: ask it to open
-            // this one without stealing focus, and wait for the mirrored push
-            // instead of falling back to the filesystem path.
+            unusableRef.current += 1
+            // Hysteresis: a transient miss keeps the last mirrored content.
+            if (modeRef.current === 'mirror' && unusableRef.current < 3) return
             if (nextSnapshot && nextSnapshot.connected && nextSnapshot.instance && target) {
               const key = target.path
-              if (autoOpenRef.current.path !== key) {
-                autoOpenRef.current = { path: key, requested: false, polls: 0 }
+              if (autoOpenRef.current.path !== key) autoOpenRef.current = { path: key, requested: false, polls: 0 }
+              const auto = autoOpenRef.current
+              if (!auto.requested) {
+                auto.requested = true
+                openInConnectedEditor(0, nextSnapshot.instance.id)
               }
-              const autoOpen = autoOpenRef.current
-              if (!autoOpen.requested) {
-                autoOpen.requested = true
-                sendMirrorCommand(nextSnapshot.instance.id, { type: 'open', path: target.path, preserveFocus: true }, editorSessionId).catch((failure) => {
-                  setError(messageOf(failure))
-                })
+              auto.polls += 1
+              if (auto.polls <= 10) {
+                changeMode('connecting')
+                return
               }
-              autoOpen.polls += 1
-              if (autoOpen.polls <= 6) return
             }
-            startFilesMode()
+            changeMode('unavailable')
+            if (document && (document.tooLarge === true || document.truncated === true)) setError(t('editor.tooLarge'))
             return
           }
           autoOpenRef.current = { path: '', requested: false, polls: 0 }
+          unusableRef.current = 0
           if (modeRef.current !== 'mirror') {
             changeMode('mirror')
-            setReadError('')
+            setError('')
           }
           setMirrorDirty(document.dirty === true)
           const pending = pendingRef.current
@@ -1031,19 +912,15 @@ window.__ModuleLoader__.load({
               pendingRef.current = { active: false, text: '', expectedVersion: 0, force: false }
               setPendingActive(false)
               if (document.text !== textRef.current) setText(document.text)
-              setSavedText(document.text)
               setBanner(null)
             } else if (document.version > pending.expectedVersion && document.text !== pending.text) {
-              setBanner({ kind: 'mirror-conflict', remoteText: document.text, remoteVersion: document.version })
+              setBanner({ kind: 'conflict', remoteText: document.text })
             }
           } else if (document.text !== textRef.current) {
             setText(document.text)
-            setSavedText(document.text)
           }
-          setVersion(String(document.version))
-          versionRef.current = String(document.version)
         },
-        [changeMode, startFilesMode, t],
+        [changeMode, target, t, openInConnectedEditor],
       )
 
       // Poll the mirror while this tab is visible.
@@ -1051,29 +928,29 @@ window.__ModuleLoader__.load({
         if (!target || !tab.visible) return undefined
         let active = true
         let timer
-        const tick = () => {
-          fetchMirror(editorSessionId, target.path, tab.signal)
+        const poll = () => {
+          fetchMirror(editorSessionId, target.path, tab.signal, pinRef.current)
             .then((nextSnapshot) => {
-              if (!active || tab.signal.aborted) return
-              applyMirrorSnapshot(nextSnapshot)
+              if (active && !tab.signal.aborted) applyMirrorSnapshot(nextSnapshot)
             })
             .catch(() => {
               /* keep the last known surface */
             })
             .then(() => {
-              if (active) timer = window.setTimeout(tick, 450)
+              if (active) timer = window.setTimeout(poll, 450)
             })
         }
-        tick()
+        pollNowRef.current = poll
+        poll()
         return () => {
           active = false
           window.clearTimeout(timer)
+          pollNowRef.current = () => {}
         }
       }, [target, tab.visible, tab.signal, editorSessionId, applyMirrorSnapshot])
 
       useEffect(() => {
         return () => {
-          if (abortRef.current) abortRef.current.abort()
           if (editTimerRef.current) window.clearTimeout(editTimerRef.current)
         }
       }, [])
@@ -1104,7 +981,7 @@ window.__ModuleLoader__.load({
 
       const revealedRef = useRef('')
       useEffect(() => {
-        if ((mode !== 'files' && mode !== 'mirror') || navigationLine <= 0 || !target) return
+        if (mode !== 'mirror' || navigationLine <= 0 || !target) return
         const key = target.path + ':' + navigationRevision
         if (revealedRef.current === key) return
         revealedRef.current = key
@@ -1113,8 +990,7 @@ window.__ModuleLoader__.load({
 
       // Focus the editor surface once when the tab becomes visible and ready.
       useEffect(() => {
-        if (mode !== 'files' && mode !== 'mirror') return
-        if (!tab.visible) return
+        if (mode !== 'mirror' || !tab.visible) return
         const textarea = textareaRef.current
         if (!textarea) return
         const active = document.activeElement
@@ -1132,81 +1008,46 @@ window.__ModuleLoader__.load({
         return () => window.clearTimeout(handle)
       }, [text])
 
-      const highlightLines = useMemo(
-        () => (text === highlightText ? highlightTextLines(highlightText, language) : null),
-        [text, highlightText, language],
-      )
+      const highlightLines = useMemo(() => (text === highlightText ? highlightTextLines(highlightText, language) : null), [text, highlightText, language])
 
-      /** Save: through the editor when mirrored, through the Harness filesystem otherwise. */
-      const save = useCallback(
-        async (force) => {
-          if (!target || saving) return
-          if (modeRef.current === 'mirror') {
-            setSaving(true)
-            setError('')
-            try {
-              await flushMirrorEdit()
-              const current = mirrorRef.current
-              const instanceId = current && current.instance ? current.instance.id : ''
-              await sendMirrorCommand(instanceId, { type: 'save', path: target.path }, editorSessionId)
-              setStatus(t('editor.mirrorSaved'))
-              window.setTimeout(() => setStatus(''), 1800)
-            } catch (failure) {
-              setError(t('editor.saveFailed', { message: messageOf(failure) }))
-            } finally {
-              setSaving(false)
-            }
-            return
-          }
-          if (modeRef.current !== 'files') return
-          setSaving(true)
-          setError('')
-          setStatus(t('editor.saving'))
-          try {
-            const result = await saveFile({
-              sessionId: editorSessionId,
-              path: target.path,
-              content: text,
-              baseVersion: force ? undefined : versionRef.current,
-              force: force === true,
-            })
-            setSavedText(text)
-            if (result && typeof result.version === 'string' && result.version) setVersion(result.version)
-            setBanner(null)
-            setStatus(t('editor.saved'))
-            window.setTimeout(() => setStatus(''), 1800)
-          } catch (failure) {
-            setStatus('')
-            if (failure && failure.code === 'stale') {
-              setBanner({ kind: 'stale' })
-              setError(t('editor.stale'))
-            } else {
-              setError(t('editor.saveFailed', { message: messageOf(failure) }))
-            }
-          } finally {
-            setSaving(false)
-          }
-        },
-        [target, saving, t, editorSessionId, text, flushMirrorEdit],
-      )
+      /** Ask the editor to save the mirrored document. */
+      const save = useCallback(async () => {
+        if (!target || saving || modeRef.current !== 'mirror') return
+        setSaving(true)
+        setError('')
+        try {
+          await flushMirrorEdit()
+          const current = mirrorRef.current
+          const instanceId = current && current.instance ? current.instance.id : pinRef.current
+          await sendMirrorCommand(instanceId, { type: 'save', path: target.path }, editorSessionId)
+          setStatus(t('editor.saved'))
+          window.setTimeout(() => setStatus(''), 1800)
+        } catch (failure) {
+          setError(t('editor.saveFailed', { message: messageOf(failure) }))
+        } finally {
+          setSaving(false)
+        }
+      }, [target, saving, t, editorSessionId, flushMirrorEdit])
 
-      /** Reload: re-sync with the editor, or re-read the file in file mode. */
+      /** Re-sync with the editor: clear pending edits, reveal the current line. */
       const reload = () => {
         setBanner(null)
-        if (modeRef.current === 'mirror') {
-          pendingRef.current = { active: false, text: '', expectedVersion: 0, force: false }
-          setPendingActive(false)
-          openInConnectedEditor(cursor.line)
+        if (modeRef.current !== 'mirror') {
+          unusableRef.current = 0
+          autoOpenRef.current = { path: '', requested: false, polls: 0 }
+          pollNowRef.current()
           return
         }
-        loadFile(false)
+        pendingRef.current = { active: false, text: '', expectedVersion: 0, force: false }
+        setPendingActive(false)
+        openInConnectedEditor(cursor.line)
       }
 
       /** Keyboard behaviour: Ctrl/Cmd+S saves, Tab indents, Enter keeps the indentation. */
       const onKeyDown = (event) => {
         if ((event.ctrlKey || event.metaKey) && !event.altKey && String(event.key).toLowerCase() === 's') {
           event.preventDefault()
-          save(false)
+          save()
           return
         }
         if (event.key === 'Tab' && !event.ctrlKey && !event.metaKey && !event.altKey) {
@@ -1244,32 +1085,6 @@ window.__ModuleLoader__.load({
         }
       }
 
-      // File mode: poll the Host version so external edits surface safely.
-      useEffect(() => {
-        if (mode !== 'files' || !target || !tab.visible) return undefined
-        let active = true
-        const check = async () => {
-          try {
-            const info = await workspaceFiles.stat(editorSessionId, target.path, tab.signal)
-            if (!active || tab.signal.aborted) return
-            const current = info && typeof info.version === 'string' ? info.version : ''
-            if (!current || current === versionRef.current) return
-            if (text !== savedText) {
-              setBanner({ kind: 'external' })
-            } else {
-              loadFile(true)
-            }
-          } catch {
-            /* a missing file is reported by the next explicit reload */
-          }
-        }
-        const timer = window.setInterval(check, 2500)
-        return () => {
-          active = false
-          window.clearInterval(timer)
-        }
-      }, [mode, target, tab.visible, tab.signal, workspaceFiles, editorSessionId, text, savedText, loadFile])
-
       const resolveConflict = (takeRemote) => {
         const conflict = banner
         setBanner(null)
@@ -1277,24 +1092,25 @@ window.__ModuleLoader__.load({
         pendingRef.current = { active: false, text: '', expectedVersion: 0, force: false }
         setPendingActive(false)
         if (takeRemote) {
-          if (typeof conflict.remoteText === 'string') {
-            setText(conflict.remoteText)
-            setSavedText(conflict.remoteText)
-          }
+          if (typeof conflict.remoteText === 'string') setText(conflict.remoteText)
           return
         }
         const current = mirrorRef.current
         if (!current || !current.document) return
+        const instanceId = current.instance ? current.instance.id : pinRef.current
         pendingRef.current = { active: true, text: textRef.current, expectedVersion: current.document.version, force: true }
         setPendingActive(true)
-        const instanceId = current.instance ? current.instance.id : ''
-        sendMirrorCommand(instanceId, {
-          type: 'edit',
-          path: target.path,
-          text: textRef.current,
-          expectedVersion: current.document.version,
-          force: true,
-        }, editorSessionId).catch((failure) => setError(messageOf(failure)))
+        sendMirrorCommand(
+          instanceId,
+          {
+            type: 'edit',
+            path: target.path,
+            text: textRef.current,
+            expectedVersion: current.document.version,
+            force: true,
+          },
+          editorSessionId,
+        ).catch((failure) => setError(messageOf(failure)))
       }
 
       if (!target) {
@@ -1303,6 +1119,13 @@ window.__ModuleLoader__.load({
 
       const mirrorInstance = mirror && mirror.instance ? mirror.instance : null
       const mirrorConnected = Boolean(mirror && mirror.connected && mirrorInstance)
+      const unavailableMessage = !mirrorConnected
+        ? t('editor.unavailableDisconnected')
+        : mirror.matching
+          ? t('editor.tooLarge')
+          : mirrorInstance.activePath
+            ? t('editor.unavailableElsewhere', { path: mirrorInstance.activePath })
+            : t('editor.unavailableDisconnected')
 
       const toolbar = []
       for (const editor of [primary, ...others]) {
@@ -1317,12 +1140,12 @@ window.__ModuleLoader__.load({
           }),
         )
       }
-      if (mirrorConnected) {
+      if (mode === 'mirror') {
         toolbar.push(
           h(
             'button',
             { key: 'locate', type: 'button', className: 'dsh-ide-bridge-btn', onClick: () => openInConnectedEditor(cursor.line), title: t('editor.mirrorLocate') },
-            h(EditorGlyph, { icon: mirrorInstance.editor === 'cursor' ? 'cursor' : 'code' }),
+            h(EditorGlyph, { icon: mirrorInstance && mirrorInstance.editor === 'cursor' ? 'cursor' : 'code' }),
             h('span', null, t('editor.mirrorLocate')),
           ),
         )
@@ -1342,10 +1165,10 @@ window.__ModuleLoader__.load({
             key: 'save',
             type: 'button',
             className: 'dsh-ide-bridge-btn' + (dirty ? ' is-primary' : ''),
-            onClick: () => save(false),
+            onClick: () => save(),
             title: dirty ? t('editor.dirty') : t('editor.save'),
             'aria-label': t('editor.save'),
-            disabled: (mode !== 'mirror' && mode !== 'files') || saving || !dirty,
+            disabled: mode !== 'mirror' || saving || !dirty,
           },
           h('span', null, saving ? t('editor.saving') : t('editor.save')),
         ),
@@ -1355,60 +1178,58 @@ window.__ModuleLoader__.load({
         ? h(
             'div',
             { className: 'dsh-ide-bridge-banner' },
-            h(
-              'span',
-              { className: 'dsh-ide-bridge-banner-text' },
-              banner.kind === 'mirror-conflict'
-                ? t('editor.mirrorConflict')
-                : banner.kind === 'stale'
-                  ? t('editor.stale')
-                  : banner.kind === 'external'
-                    ? t('editor.external') + ' ' + t('editor.externalHint')
-                    : t('editor.reloadConfirm'),
-            ),
-            banner.kind === 'mirror-conflict'
-              ? h('button', { type: 'button', className: 'dsh-ide-bridge-btn', onClick: () => resolveConflict(true) }, t('editor.mirrorTakeRemote'))
-              : null,
-            banner.kind === 'mirror-conflict'
-              ? h('button', { type: 'button', className: 'dsh-ide-bridge-btn', onClick: () => resolveConflict(false) }, t('editor.mirrorOverwrite'))
-              : null,
-            banner.kind === 'stale' ? h('button', { type: 'button', className: 'dsh-ide-bridge-btn', onClick: () => save(true) }, t('editor.forceSave')) : null,
-            banner.kind === 'stale' || banner.kind === 'external' || banner.kind === 'reload'
-              ? h('button', { type: 'button', className: 'dsh-ide-bridge-btn', onClick: reload }, t('editor.reloadNow'))
-              : null,
-            banner.kind !== 'mirror-conflict'
-              ? h('button', { type: 'button', className: 'dsh-ide-bridge-btn', onClick: () => setBanner(null) }, t('editor.keepMine'))
-              : null,
+            h('span', { className: 'dsh-ide-bridge-banner-text' }, t('editor.mirrorConflict')),
+            h('button', { type: 'button', className: 'dsh-ide-bridge-btn', onClick: () => resolveConflict(true) }, t('editor.mirrorTakeRemote')),
+            h('button', { type: 'button', className: 'dsh-ide-bridge-btn', onClick: () => resolveConflict(false) }, t('editor.mirrorOverwrite')),
           )
         : null
 
       const notices = []
-      if (mirror && mirror.connected && mirrorInstance) {
-        if (mode !== 'mirror') {
-          const activePath = mirrorInstance.activePath || ''
-          notices.push(
+      if (mode === 'unavailable') {
+        notices.push(
+          h(
+            'div',
+            { className: 'dsh-ide-bridge-notice is-warn', key: 'notice' },
+            h('span', { className: 'dsh-ide-bridge-notice-text' }, unavailableMessage),
+            mirrorConnected
+              ? h(
+                  'button',
+                  {
+                    type: 'button',
+                    className: 'dsh-ide-bridge-btn',
+                    onClick: () => {
+                      unusableRef.current = 0
+                      autoOpenRef.current = { path: '', requested: false, polls: 0 }
+                      changeMode('connecting')
+                      openInConnectedEditor(0)
+                    },
+                  },
+                  t('editor.openInEditor'),
+                )
+              : null,
+            h('button', { type: 'button', className: 'dsh-ide-bridge-btn', onClick: () => openPreview(tab.contentId) }, t('editor.previewOnly')),
             h(
-              'div',
-              { className: 'dsh-ide-bridge-notice is-warn', key: 'notice' },
-              h('span', { className: 'dsh-ide-bridge-notice-text' }, activePath ? t('editor.mirrorActiveElsewhere', { path: activePath }) : t('editor.mirrorTooLarge')),
-              h('button', { type: 'button', className: 'dsh-ide-bridge-btn', onClick: () => openInConnectedEditor(0) }, t('editor.mirrorOpenHere')),
+              'button',
+              {
+                type: 'button',
+                className: 'dsh-ide-bridge-btn',
+                onClick: () => {
+                  unusableRef.current = 0
+                  autoOpenRef.current = { path: '', requested: false, polls: 0 }
+                  pollNowRef.current()
+                },
+              },
+              t('editor.retry'),
             ),
-          )
-        }
-      } else if (mode !== 'loading') {
-        notices.push(h('div', { className: 'dsh-ide-bridge-notice', key: 'notice' }, h('span', { className: 'dsh-ide-bridge-notice-text' }, t('editor.mirrorDisconnected'))))
+          ),
+        )
       }
 
       let body
-      if (mode === 'loading') {
+      if (mode === 'connecting') {
         body = h('div', { className: 'dsh-ide-bridge-state' }, t('editor.loading'))
-      } else if (mode === 'error') {
-        body = h(
-          'div',
-          { className: 'dsh-ide-bridge-state' },
-          readError || t('editor.readFailed', { message: '' }),
-          h('button', { type: 'button', className: 'dsh-ide-bridge-btn', onClick: () => loadFile(false) }, t('editor.retry')),
-        )
+      } else if (mode === 'unavailable') {
+        body = h('div', { className: 'dsh-ide-bridge-state' }, unavailableMessage)
       } else {
         const highlightNodes = highlightLines
           ? highlightLines.map((tokens, index) => h('div', { key: index, className: 'dsh-ide-bridge-line' }, renderTokens(tokens)))
@@ -1473,15 +1294,16 @@ window.__ModuleLoader__.load({
         h(
           'div',
           { className: 'dsh-ide-bridge-foot' },
-          h('span', { className: 'dsh-ide-bridge-mode' }, mode === 'mirror' && mirrorInstance ? t('editor.mirrorBadge', { name: editorName(mirrorInstance.editor) }) : t('editor.mirrorFiles')),
+          h('span', { className: 'dsh-ide-bridge-mode' }, mode === 'mirror' && mirrorInstance ? t('editor.mirrorBadge', { name: editorName(mirrorInstance.editor) }) : t('editor.modeIdle')),
           h('span', null, t('editor.cursor', { line: cursor.line, column: cursor.column })),
           h('span', { className: 'dsh-ide-bridge-spacer' }),
           status ? h('span', null, status) : null,
-          mode === 'mirror' || mode === 'files' ? h('span', null, t('editor.lines', { count: lineCount })) : null,
+          mode === 'mirror' ? h('span', null, t('editor.lines', { count: lineCount })) : null,
           h('span', null, t('editor.hint')),
         ),
       )
     }
+
 
     /** The changed-files page body. */
     function ChangesPanel(props) {
@@ -1718,7 +1540,7 @@ window.__ModuleLoader__.load({
     }
 
     /** Services this plugin needs before it can activate. */
-    const inject = ['slots', 'locale', 'sidebarRightTabs', 'sidebarRight', 'remote', 'remote.workspaceFiles']
+    const inject = ['slots', 'locale', 'sidebarRightTabs', 'sidebarRight']
 
     /**
      * Client plugin body: register dictionaries, the two tab types, their bodies,
@@ -1741,8 +1563,7 @@ window.__ModuleLoader__.load({
           /* no controller surface for this address */
         }
       }
-      const workspaceFiles = ctx.remote.workspaceFiles
-      const bodyInject = () => ({ openPreview, openResource, workspaceFiles })
+      const bodyInject = () => ({ openPreview, openResource })
       ctx.effect(() => ctx.locale.register(NS, 'zh', ZH), 'ide-bridge: zh dictionary')
       ctx.effect(() => ctx.locale.register(NS, 'en', EN), 'ide-bridge: en dictionary')
       ctx.effect(() => installStyles(), 'ide-bridge: styles')
